@@ -12,41 +12,67 @@ const AuthCtx = createContext({
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // loading cubre sesión + perfil
 
-  // Sesión inicial + listener
+  // 1) Obtener sesión inicial y suscribirse a cambios
   useEffect(() => {
+    let mounted = true
+
     supabase.auth.getSession()
-      .then(({ data }) => setSession(data.session))
-      .finally(() => setLoading(false))
+      .then(({ data }) => {
+        if (!mounted) return
+        setSession(data.session ?? null)
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, _session) => {
-      setSession(_session)
+      setSession(_session ?? null)
     })
-    return () => sub.subscription.unsubscribe()
+
+    return () => {
+      mounted = false
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
-  // Cargar profile cuando haya sesión
+  // 2) Cargar el profile cuando haya sesión; limpiarlo cuando no
   useEffect(() => {
     let cancelled = false
-    async function fetchProfile() {
+
+    async function loadProfile() {
+      // si no hay usuario, limpia y listo
       if (!session?.user?.id) {
         setProfile(null)
         return
       }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, nombre_completo, role')
-        .eq('user_id', session.user.id)
-        .single()
-      if (!cancelled) {
-        if (error) console.error(error)
-        setProfile(data || null)
+
+      // mientras cargamos el profile, marcamos loading
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, role, nombre_completo')
+          .eq('user_id', session.user.id)
+          .single()
+
+        if (!cancelled) {
+          if (error) {
+            // si por alguna razón no existe fila (no debería), deja profile en null
+            setProfile(null)
+          } else {
+            setProfile(data)
+          }
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
-    fetchProfile()
+
+    loadProfile()
     return () => { cancelled = true }
-  }, [session])
+  }, [session?.user?.id])
 
   const value = useMemo(
     () => ({ session, profile, setProfile, loading }),
