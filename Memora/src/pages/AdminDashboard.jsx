@@ -1,39 +1,36 @@
+// src/pages/AdminDashboard.jsx
 import { useEffect, useState } from 'react'
-import { adminGetStats } from '../features/admin/admin.orders.service'
-
-const money = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n||0))
+import { adminGetKpis } from '../features/admin/admin.service'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(null)
-  const [err, setErr] = useState('')
+  const [kpi, setKpi] = useState({ pedidos: 0, ataudes: 0 })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    adminGetStats().then(setStats).catch(e=>setErr(e.message))
+    adminGetKpis().then(setKpi).finally(() => setLoading(false))
   }, [])
 
-  if (err) return <div className="p-6 text-red-600">{err}</div>
-  if (!stats) return <div className="p-6">Cargando…</div>
-
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Panel de Administración</h1>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card title="Pedidos" value={stats.total} />
-        <Card title="Sin pagar" value={stats.sinPagar} />
-        <Card title="Pagados" value={stats.pagado} />
-        <Card title="Entregados" value={stats.entregado} />
-        <Card title="Ingreso" value={money(stats.ingreso)} />
-      </div>
-    </div>
-  )
-}
-
-function Card({ title, value }) {
-  return (
-    <div className="rounded-xl border p-4">
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="text-2xl font-semibold">{value}</div>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      {loading ? (
+        <p>Cargando…</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="border rounded-lg p-4">
+            <div className="text-gray-500 text-sm">Pedidos totales</div>
+            <div className="text-3xl font-semibold">{kpi.pedidos}</div>
+          </div>
+          <div className="border rounded-lg p-4">
+            <div className="text-gray-500 text-sm">Catálogo (ataúdes)</div>
+            <div className="text-3xl font-semibold">{kpi.ataudes}</div>
+          </div>
+          <div className="border rounded-lg p-4">
+            <div className="text-gray-500 text-sm">Próximamente</div>
+            <div className="text-3xl font-semibold">—</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
