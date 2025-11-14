@@ -12,24 +12,38 @@ export default function AtaudDetailPanel({ ataud, onClose, onProceed }) {
     <section className="max-w-3xl mx-auto mt-8 p-4">
       <h2 className="text-2xl font-semibold mb-4">{ataud.nombre}</h2>
 
-      <div className="h-56 rounded-xl bg-slate-100 mb-4" />
+      {/* Imagen grande */}
+      <div className="h-56 rounded-xl bg-slate-100 mb-4 flex items-center justify-center overflow-hidden">
+        {ataud.imagen_url ? (
+          <img
+            src={ataud.imagen_url}
+            alt={ataud.nombre}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="text-xs text-slate-400">Sin imagen</span>
+        )}
+      </div>
 
       <p className="text-slate-700 mb-4">{ataud.descripcion}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
         <div>
-          <span className="font-semibold">Material:</span> {ataud.material || '—'}
+          <span className="font-semibold">Material:</span>{' '}
+          {ataud.material || '—'}
         </div>
         <div>
-          <span className="font-semibold">Interior:</span> {ataud.interior || '—'}
+          <span className="font-semibold">Interior:</span>{' '}
+          {ataud.interior || '—'}
         </div>
         <div className="sm:col-span-2">
-          <span className="font-semibold">Dimensiones:</span> {ataud.dimensiones || '—'}
+          <span className="font-semibold">Dimensiones:</span>{' '}
+          {ataud.dimensiones || '—'}
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 mt-6">
-        {/* ✅ precio corregido */}
+        {/* precio corregido */}
         <div className="text-2xl text-orange-600 font-semibold">
           {money(ataud.precio)}
         </div>
@@ -55,5 +69,5 @@ export default function AtaudDetailPanel({ ataud, onClose, onProceed }) {
 AtaudDetailPanel.propTypes = {
   ataud: PropTypes.object,
   onClose: PropTypes.func,
-  onProceed: PropTypes.func
+  onProceed: PropTypes.func,
 }
