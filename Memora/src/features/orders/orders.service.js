@@ -12,7 +12,9 @@ const PROFILES_REL = 'profiles!pedidos_user_id_profiles_fkey' // usa la FK explÃ
    ========================= */
 
 /** Lista de pedidos del usuario logueado (para la cuenta) */
-export async function getMyOrders() {
+export async function getMyOrders(userId) {
+  if (!userId) throw new Error('Falta userId para getMyOrders')
+
   const { data, error } = await supabase
     .from('pedidos')
     .select(`
@@ -27,7 +29,10 @@ export async function getMyOrders() {
       created_at,
       ataudes:ataud_id ( nombre, precio, slug )
     `)
+    .eq('user_id', userId)                  // ðŸ‘ˆ ahora solo los pedidos de ese usuario
+    .neq('order_status', 'CANCELADO')
     .order('created_at', { ascending: false })
+
   if (error) throw error
   return data
 }
