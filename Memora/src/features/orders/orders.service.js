@@ -29,8 +29,8 @@ export async function getMyOrders(userId) {
       created_at,
       ataudes:ataud_id ( nombre, precio, slug )
     `)
-    .eq('user_id', userId)                  // 👈 ahora solo los pedidos de ese usuario
-    .neq('order_status', 'CANCELADO')
+    .eq('user_id', userId) // 👈 solo pedidos de ese usuario
+    .neq('order_status', 'CANCELADO') // 👈 ocultar cancelados al cliente
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -158,12 +158,11 @@ export async function getAdminOrders({ status = null, search = '', limit = 50, f
   }
 
   if (search) {
-    // Buscar por folio o por nombre en profiles (usando la relación explícita)
-    const orExpr = [
-      `public_id.ilike.%${search}%`,
-      `${PROFILES_REL}.nombre_completo.ilike.%${search}%`,
-    ].join(',')
-    query = query.or(orExpr)
+    const term = search.trim()
+    if (term) {
+      // ✅ Simple y sin errores: buscar solo por folio
+      query = query.or(`public_id.ilike.%${term}%`)
+    }
   }
 
   const { data, error } = await query
